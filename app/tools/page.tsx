@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 import { Metadata } from 'next'
 import { fetchTools, getCategories } from '@/lib/tools/queries'
 import { ToolsContainer } from '@/components/tools/tools-container'
