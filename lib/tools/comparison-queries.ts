@@ -1,41 +1,129 @@
-We found the exact cause of the compare 404 issue.
+/**
+ * Comparison-specific queries
+ * Handles fetching pairs of tools for comparison pages
+ */
 
-Problem:
-The compare links on /compare are built manually as:
-`/compare/${comparison.slugA}-vs-${comparison.slugB}`
+import { Tool } from './types'
+import { fetchToolBySlug, fetchTools } from './queries'
 
-But the dynamic route uses `generateStaticParams()` with `generateComparisonSlug(slugA, slugB)`, which alphabetically sorts the pair.
-This means the public link format and the generated static route format can diverge, causing 404s.
+export type ComparisonPair = {
+  toolA: Tool
+  toolB: Tool
+}
 
-Your task now is to fix this compare slug consistency issue.
+/**
+ * Fetch two tools by their slugs for comparison
+ * Returns null if either tool doesn't exist
+ */
+export async function fetchComparisonPair(slugA: string, slugB: string): Promise<ComparisonPair | null> {
+  const normalizedA = slugA.toLowerCase()
+  const normalizedB = slugB.toLowerCase()
 
-Required fixes:
-1. in /compare page, stop building compare URLs manually
-2. use `generateComparisonSlug(comparison.slugA, comparison.slugB)` everywhere a comparison link is created
-3. audit all compare links across the app and ensure they use the same slug generator
-4. in the dynamic compare page, normalize the incoming slug against the canonical generated slug
-5. if the URL is valid but non-canonical, redirect to the canonical comparison URL
-6. keep invalid tool pairs returning 404
+  if (normalizedA === normalizedB) {
+    return null
+  }
 
-Files to inspect and fix:
-- app/compare/page.tsx
-- app/compare/[slug]/page.tsx
-- any component generating compare links
-- lib/tools/comparison-queries.ts if minor normalization improvements are needed
+  const [toolA, toolB] = await Promise.all([
+    fetchToolBySlug(normalizedA),
+    fetchToolBySlug(normalizedB),
+  ])
 
-Important:
-- do not redesign the compare page
-- do not remove curated comparisons
-- fix slug consistency only
-- ensure these URLs resolve correctly after the fix:
-  - /compare/claude-vs-copy-ai
-  - /compare/chatgpt-vs-claude
+  if (!toolA || !toolB) {
+    return null
+  }
 
-Before changing code, summarize your fix plan in 5 bullets.
+  return { toolA, toolB }
+}
 
-Output:
-- root cause confirmed
-- files changed
-- exact code fix applied
-- whether compare links are now canonical
-- whether 404s for valid pairs are resolved
+/**
+ * Get all valid comparison pairs (for sitemap generation)
+ * Returns pairs of real comparisons that should be indexed
+ */
+export async function getAllComparisonPairs(): Promise<Array<{ slugA: string; slugB: string }>> {
+  const curations = getCuratedComparisons()
+  const allTools = await fetchTools()
+  const toolSlugs = new Set(allTools.map((t) => t.slug.toLowerCase()))
+
+  return curations.filter(
+    (pair) =>
+      toolSlugs.has(pair.slugA.toLowerCase()) &&
+      toolSlugs.has(pair.slugB.toLowerCase())
+  )
+}
+
+/**
+ * Curated comparison pairs
+ */
+export function getCuratedComparisons(): Array<{
+  slugA: string
+  slugB: string
+  title: string
+  description: string
+}> {
+  return [
+    {
+      slugA: 'chatgpt',
+      slugB: 'claude',
+      title: 'ChatGPT vs Claude',
+      description: 'Compare two of the most popular conversational AI tools for writing and analysis.',
+    },
+    {
+      slugA: 'chatgpt',
+      slugB: 'copy-ai',
+      title: 'ChatGPT vs Copy.ai',
+      description: 'See how ChatGPT compares to Copy.ai for content generation and copywriting.',
+    },
+    {
+      slugA: 'claude',
+      slugB: 'copy-ai',
+      title: 'Claude vs Copy.ai',
+      description: 'Compare Claude and Copy.ai for content creation and copywriting.',
+    },
+    {
+      slugA: 'midjourney',
+      slugB: 'dall-e-3',
+      title: 'Midjourney vs DALL-E 3',
+      description: 'Discover the differences between two leading AI image generation platforms.',
+    },
+    {
+      slugA: 'github-copilot',
+      slugB: 'tabnine',
+      title: 'GitHub Copilot vs Tabnine',
+      description: 'Compare AI-powered coding assistants to boost your development workflow.',
+    },
+    {
+      slugA: 'chatgpt',
+      slugB: 'github-copilot',
+      title: 'ChatGPT vs GitHub Copilot',
+      description: 'Compare general-purpose AI with specialized coding assistance.',
+    },
+  ]
+}
+
+/**
+ * Generate comparison slug from two tool slugs
+ * Always puts them in alphabetical order for consistency
+ */
+export function generateComparisonSlug(slugA: string, slugB: string): string {
+  const [first, second] = [slugA, slugB].sort()
+  return `${first}-vs-${second}`
+}
+
+/**
+ * Parse comparison slug into two tool slugs
+ * Returns null if slug is invalid
+ */
+export function parseComparisonSlug(slug: string): { slugA: string; slugB: string } | null {
+  const parts = slug.split('-vs-')
+  if (parts.length !== 2) {
+    return null
+  }
+  return { slugA: parts[0], slugB: parts[1] }
+}
+
+/**
+ * Check if a slug is a valid comparison format
+ */
+export function isValidComparisonSlug(slug: string): boolean {
+  return slug.includes('-vs-') && parseComparisonSlug(slug) !== null
+}
