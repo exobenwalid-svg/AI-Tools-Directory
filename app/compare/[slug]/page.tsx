@@ -1,6 +1,6 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import Script from 'next/script'
 import {
   fetchComparisonPair,
@@ -26,6 +26,8 @@ export async function generateMetadata({ params }: ComparisonPageProps): Promise
     }
   }
 
+  const canonicalSlug = generateComparisonSlug(parsed.slugA, parsed.slugB)
+
   const pair = await fetchComparisonPair(parsed.slugA, parsed.slugB)
 
   if (!pair) {
@@ -38,7 +40,7 @@ export async function generateMetadata({ params }: ComparisonPageProps): Promise
   const { toolA, toolB } = pair
   const title = `${toolA.name} vs ${toolB.name}: Complete Comparison | AILIQ`
   const description = `Compare ${toolA.name} and ${toolB.name} side-by-side. See pricing, features, pros, cons, and best use cases.`
-  const url = `https://www.ailiq.xyz/compare/${slug}`
+  const url = `https://www.ailiq.xyz/compare/${canonicalSlug}`
 
   return {
     title,
@@ -50,7 +52,9 @@ export async function generateMetadata({ params }: ComparisonPageProps): Promise
       'tool comparison',
       'AI comparison',
     ],
-    canonical: url,
+    alternates: {
+      canonical: url,
+    },
     robots: { index: true, follow: true },
     openGraph: {
       title,
@@ -92,6 +96,12 @@ export default async function ComparisonPage({ params }: ComparisonPageProps) {
     notFound()
   }
 
+  const canonicalSlug = generateComparisonSlug(parsed.slugA, parsed.slugB)
+
+  if (slug !== canonicalSlug) {
+    redirect(`/compare/${canonicalSlug}`)
+  }
+
   const pair = await fetchComparisonPair(parsed.slugA, parsed.slugB)
 
   if (!pair) {
@@ -101,7 +111,6 @@ export default async function ComparisonPage({ params }: ComparisonPageProps) {
   const { toolA, toolB } = pair
   const allTools = await fetchTools()
 
-  // Structured data for comparison
   const comparisonSchema = {
     '@context': 'https://schema.org',
     '@type': 'ComparisonChart',
@@ -141,7 +150,6 @@ export default async function ComparisonPage({ params }: ComparisonPageProps) {
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Breadcrumb */}
         <div className="mb-6 flex items-center gap-2 text-sm text-muted-foreground">
           <Link href="/compare" className="hover:text-foreground transition-colors">
             Compare
@@ -152,7 +160,6 @@ export default async function ComparisonPage({ params }: ComparisonPageProps) {
           </span>
         </div>
 
-        {/* Header */}
         <div className="mb-12">
           <h1 className="text-4xl font-bold text-foreground mb-4">
             {toolA.name} vs {toolB.name}
@@ -162,10 +169,8 @@ export default async function ComparisonPage({ params }: ComparisonPageProps) {
           </p>
         </div>
 
-        {/* Comparison Detail */}
         <ComparisonDetail toolA={toolA} toolB={toolB} allTools={allTools} />
 
-        {/* Tools Links */}
         <div className="mt-16 pt-8 border-t border-border">
           <p className="text-sm text-muted-foreground mb-4">Learn more about each tool:</p>
           <div className="grid md:grid-cols-2 gap-4">
@@ -186,25 +191,28 @@ export default async function ComparisonPage({ params }: ComparisonPageProps) {
           </div>
         </div>
 
-        {/* Related Comparisons */}
         <div className="mt-16 pt-8 border-t border-border">
           <h2 className="text-2xl font-bold text-foreground mb-6">Other Comparisons</h2>
           <div className="grid md:grid-cols-3 gap-4">
             {allTools
               .filter((t) => t.slug !== toolA.slug && t.slug !== toolB.slug)
               .slice(0, 3)
-              .map((tool) => (
-                <Link
-                  key={tool.id}
-                  href={`/compare/${generateComparisonSlug(toolA.slug, tool.slug)}`}
-                  className="p-4 border border-border rounded-lg hover:border-primary/50 hover:bg-card/50 transition-colors"
-                >
-                  <h3 className="font-semibold text-foreground mb-1">
-                    {toolA.name} vs {tool.name}
-                  </h3>
-                  <p className="text-xs text-muted-foreground">Compare →</p>
-                </Link>
-              ))}
+              .map((tool) => {
+                const comparisonSlug = generateComparisonSlug(toolA.slug, tool.slug)
+
+                return (
+                  <Link
+                    key={tool.id}
+                    href={`/compare/${comparisonSlug}`}
+                    className="p-4 border border-border rounded-lg hover:border-primary/50 hover:bg-card/50 transition-colors"
+                  >
+                    <h3 className="font-semibold text-foreground mb-1">
+                      {toolA.name} vs {tool.name}
+                    </h3>
+                    <p className="text-xs text-muted-foreground">Compare →</p>
+                  </Link>
+                )
+              })}
           </div>
         </div>
       </div>
