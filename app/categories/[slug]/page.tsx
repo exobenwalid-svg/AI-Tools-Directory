@@ -8,6 +8,23 @@ type PageProps = {
   }>
 }
 
+function getCategoryFaqs(categoryName: string) {
+  return [
+    {
+      question: `What are the best ${categoryName} tools?`,
+      answer: `The best ${categoryName} tools depend on your workflow, budget, and goals. Compare features, pricing, strengths, and use cases to choose the right option.`,
+    },
+    {
+      question: `How do I choose the right ${categoryName} tool?`,
+      answer: `Start by identifying your main use case, then compare output quality, ease of use, pricing, team features, and how well the tool fits your workflow.`,
+    },
+    {
+      question: `Are ${categoryName} tools worth it?`,
+      answer: `${categoryName} tools can be worth it if they save time, improve quality, or help your team scale work more efficiently.`,
+    },
+  ]
+}
+
 export async function generateMetadata({ params }: PageProps) {
   const { slug } = await params
   const categories = await getCategories()
@@ -66,15 +83,64 @@ export default async function CategoryPage({ params }: PageProps) {
     sort: 'rating',
   })
 
+  const faqs = getCategoryFaqs(category.name)
+
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Home',
+        item: 'https://www.ailiq.xyz/',
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Categories',
+        item: 'https://www.ailiq.xyz/categories',
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: category.name,
+        item: `https://www.ailiq.xyz/categories/${category.slug}`,
+      },
+    ],
+  }
+
+  const faqJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map((faq) => ({
+      '@type': 'Question',
+      name: faq.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: faq.answer,
+      },
+    })),
+  }
+
   return (
     <main className="mx-auto max-w-6xl px-4 py-10">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
+
       <nav className="mb-6 text-sm text-gray-500">
         <Link href="/" className="hover:text-gray-900">
           Home
         </Link>{' '}
         /{' '}
-        <Link href="/tools" className="hover:text-gray-900">
-          Tools
+        <Link href="/categories" className="hover:text-gray-900">
+          Categories
         </Link>{' '}
         / <span className="text-gray-900">{category.name}</span>
       </nav>
@@ -90,19 +156,33 @@ export default async function CategoryPage({ params }: PageProps) {
       </header>
 
       <section className="mb-12">
+        <div className="mb-5 flex items-center justify-between gap-4">
+          <h2 className="text-2xl font-semibold text-gray-900">
+            Top {category.name} tools
+          </h2>
+          <Link
+            href="/tools"
+            className="text-sm font-medium text-blue-600 hover:text-blue-800"
+          >
+            Browse all AI tools
+          </Link>
+        </div>
+
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {tools.map((tool) => (
             <article
               key={tool.slug}
               className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
             >
-              <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-gray-900">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <h3 className="text-xl font-semibold text-gray-900">
                   <Link href={`/tools/${tool.slug}`} className="hover:underline">
                     {tool.name}
                   </Link>
-                </h2>
-                <span className="text-sm font-medium text-gray-500">{tool.rating}</span>
+                </h3>
+                <span className="text-sm font-medium text-gray-500">
+                  {tool.rating}
+                </span>
               </div>
 
               <p className="mb-4 text-sm leading-6 text-gray-600">
@@ -111,7 +191,9 @@ export default async function CategoryPage({ params }: PageProps) {
 
               <div className="mb-4 flex flex-wrap gap-2 text-xs text-gray-500">
                 {tool.price && (
-                  <span className="rounded-full bg-gray-100 px-3 py-1">{tool.price}</span>
+                  <span className="rounded-full bg-gray-100 px-3 py-1">
+                    {tool.price}
+                  </span>
                 )}
                 {tool.featured && (
                   <span className="rounded-full bg-blue-100 px-3 py-1 text-blue-700">
@@ -124,7 +206,7 @@ export default async function CategoryPage({ params }: PageProps) {
                 href={`/tools/${tool.slug}`}
                 className="inline-flex text-sm font-medium text-blue-600 hover:text-blue-800"
               >
-                Read review
+                Read {tool.name} review
               </Link>
             </article>
           ))}
@@ -132,22 +214,48 @@ export default async function CategoryPage({ params }: PageProps) {
       </section>
 
       <section className="mb-12">
-        <h2 className="text-2xl font-semibold text-gray-900">How to choose</h2>
+        <h2 className="text-2xl font-semibold text-gray-900">
+          How to choose the right {category.name} tool
+        </h2>
         <div className="mt-4 max-w-3xl space-y-4 text-gray-600">
           <p>
-            Compare tools based on your actual workflow. Some tools are better for SEO
-            content, others are stronger for marketing copy, long-form writing, editing,
-            or collaboration.
+            Compare tools based on your actual workflow. Some tools are better
+            for SEO content, others are stronger for marketing copy, long-form
+            writing, editing, collaboration, research, or productivity.
           </p>
           <p>
-            Look at pricing, strengths, content quality, and how well each tool fits your
-            team or publishing workflow before choosing one.
+            Look at pricing, strengths, output quality, feature depth, and how
+            well each option fits your individual or team workflow before making
+            a decision.
           </p>
         </div>
       </section>
 
+      <section className="mb-12">
+        <h2 className="text-2xl font-semibold text-gray-900">
+          Frequently asked questions about {category.name}
+        </h2>
+        <div className="mt-6 space-y-4">
+          {faqs.map((faq) => (
+            <article
+              key={faq.question}
+              className="rounded-2xl border border-gray-200 bg-white p-6"
+            >
+              <h3 className="text-lg font-semibold text-gray-900">
+                {faq.question}
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-gray-600">
+                {faq.answer}
+              </p>
+            </article>
+          ))}
+        </div>
+      </section>
+
       <section>
-        <h2 className="text-2xl font-semibold text-gray-900">Related categories</h2>
+        <h2 className="text-2xl font-semibold text-gray-900">
+          Explore related AI tool categories
+        </h2>
         <div className="mt-4 flex flex-wrap gap-3">
           {categories
             .filter((c) => c.slug !== category.slug)
@@ -158,7 +266,7 @@ export default async function CategoryPage({ params }: PageProps) {
                 href={`/categories/${c.slug}`}
                 className="rounded-full border border-gray-200 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
               >
-                {c.name}
+                Explore {c.name}
               </Link>
             ))}
         </div>
