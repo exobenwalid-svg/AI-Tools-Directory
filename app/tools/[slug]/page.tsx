@@ -1,22 +1,18 @@
-import { Metadata } from 'next'
+import type { Metadata } from 'next'
 import Link from 'next/link'
-import { fetchToolBySlug, getRelatedTools } from '@/lib/tools/queries'
-import { notFound } from 'next/navigation'
 import Script from 'next/script'
+import { notFound } from 'next/navigation'
+import { fetchToolBySlug, getRelatedTools } from '@/lib/tools/queries'
+
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 interface ToolDetailPageProps {
   params: Promise<{ slug: string }>
 }
 
-export async function generateStaticParams() {
-  const tools = await (await import('@/lib/tools/queries')).fetchTools()
-  return tools.map((tool) => ({
-    slug: tool.slug,
-  }))
-}
-
 export async function generateMetadata(
-  { params }: ToolDetailPageProps,
+  { params }: ToolDetailPageProps
 ): Promise<Metadata> {
   const { slug } = await params
   const tool = await fetchToolBySlug(slug)
@@ -32,8 +28,9 @@ export async function generateMetadata(
   }
 
   const canonicalUrl = `https://www.ailiq.xyz/tools/${tool.slug}`
-  const ratingValue = tool.rating.toFixed(1)
+  const ratingValue = Number(tool.rating || 0).toFixed(1)
   const reviewCount = tool.review_count || 0
+  const imageUrl = tool.images?.[0] || '/og-image.png'
 
   return {
     title: `${tool.name} - AI Tool Review & Pricing | AILIQ`,
@@ -42,12 +39,14 @@ export async function generateMetadata(
       tool.name,
       `${tool.name} review`,
       `${tool.name} pricing`,
-      tool.category,
+      tool.category || 'AI tool',
       'AI tool',
       'AI software',
       ...(tool.tags || []),
     ],
-    canonical: canonicalUrl,
+    alternates: {
+      canonical: canonicalUrl,
+    },
     robots: {
       index: true,
       follow: true,
@@ -60,7 +59,7 @@ export async function generateMetadata(
       siteName: 'AILIQ',
       images: [
         {
-          url: tool.images[0] || '/og-image.png',
+          url: imageUrl,
           width: 1200,
           height: 630,
           alt: `${tool.name} - AI Tool`,
@@ -73,7 +72,7 @@ export async function generateMetadata(
       creator: '@AILIQDirectory',
       title: `${tool.name} | AILIQ`,
       description: tool.short_description,
-      images: [tool.images[0] || '/og-image.png'],
+      images: [imageUrl],
     },
   }
 }
@@ -88,37 +87,46 @@ export default async function ToolDetailPage({ params }: ToolDetailPageProps) {
 
   const relatedTools = await getRelatedTools(slug, 3)
 
-  // Structured data schemas
+  const pricingTiers = tool.pricing_tiers || []
+  const faqs = tool.faqs || []
+  const pros = tool.pros || []
+  const cons = tool.cons || []
+  const images = tool.images || []
+  const tags = tool.tags || []
+
   const softwareApplicationSchema = {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
     name: tool.name,
     description: tool.short_description,
     url: tool.official_url || `https://www.ailiq.xyz/tools/${tool.slug}`,
-    applicationCategory: 'Productivity',
+    applicationCategory: tool.category || 'AI Tool',
     aggregateRating: {
       '@type': 'AggregateRating',
-      ratingValue: tool.rating.toFixed(1),
+      ratingValue: Number(tool.rating || 0).toFixed(1),
       ratingCount: tool.review_count || 0,
     },
-    offers: tool.pricing_tiers.length > 0
-      ? tool.pricing_tiers.map((tier) => ({
-          '@type': 'Offer',
-          name: tier.name,
-          price: tier.price.includes('Free') ? '0' : tier.price.replace('$', '').split('/')[0],
-          priceCurrency: 'USD',
-          description: tier.features.join(', '),
-        }))
-      : undefined,
-    image: tool.images[0] || undefined,
+    offers:
+      pricingTiers.length > 0
+        ? pricingTiers.map((tier) => ({
+            '@type': 'Offer',
+            name: tier.name,
+            price: tier.price?.includes('Free')
+              ? '0'
+              : (tier.price || '').replace('$', '').split('/')[0],
+            priceCurrency: 'USD',
+            description: Array.isArray(tier.features) ? tier.features.join(', ') : '',
+          }))
+        : undefined,
+    image: images[0] || undefined,
   }
 
   const faqSchema =
-    tool.faqs && tool.faqs.length > 0
+    faqs.length > 0
       ? {
           '@context': 'https://schema.org',
           '@type': 'FAQPage',
-          mainEntity: tool.faqs.map((faq) => ({
+          mainEntity: faqs.map((faq) => ({
             '@type': 'Question',
             name: faq.question,
             acceptedAnswer: {
@@ -131,7 +139,6 @@ export default async function ToolDetailPage({ params }: ToolDetailPageProps) {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Structured Data */}
       <Script
         id="software-application-schema"
         type="application/ld+json"
@@ -148,10 +155,10 @@ export default async function ToolDetailPage({ params }: ToolDetailPageProps) {
           }}
         />
       )}
-      {/* Breadcrumb */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Link href="/tools" className="hover:text-foreground transition-colors">
+          <Link href="/tools" className="transition-colors hover:text-foreground">
             Tools
           </Link>
           <span>/</span>
@@ -159,39 +166,42 @@ export default async function ToolDetailPage({ params }: ToolDetailPageProps) {
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid lg:grid-cols-3 gap-12">
-          {/* Left Column - Main Info */}
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <div className="grid gap-12 lg:grid-cols-3">
           <div className="lg:col-span-2">
-            {/* Header */}
             <div className="mb-8">
-              <div className="flex items-start justify-between gap-4 mb-4">
+              <div className="mb-4 flex items-start justify-between gap-4">
                 <div>
-                  <h1 className="text-4xl font-bold text-foreground mb-2">{tool.name}</h1>
-                  <p className="text-lg text-muted-foreground">{tool.category}</p>
+                  <h1 className="mb-2 text-4xl font-bold text-foreground">{tool.name}</h1>
+                  <p className="text-lg text-muted-foreground">{tool.category || 'AI Tool'}</p>
                 </div>
                 {tool.featured && (
-                  <span className="px-3 py-1 bg-amber-100 dark:bg-amber-900 text-amber-900 dark:text-amber-100 text-sm font-medium rounded-full whitespace-nowrap">
+                  <span className="whitespace-nowrap rounded-full bg-amber-100 px-3 py-1 text-sm font-medium text-amber-900 dark:bg-amber-900 dark:text-amber-100">
                     ⭐ Featured
                   </span>
                 )}
               </div>
 
-              {/* Rating and Links */}
-              <div className="flex flex-wrap items-center gap-4 mb-6 pb-6 border-b border-border">
+              <div className="mb-6 flex flex-wrap items-center gap-4 border-b border-border pb-6">
                 <div className="flex items-center gap-2">
-                  <span className="text-2xl font-bold text-foreground">{tool.rating.toFixed(1)}</span>
+                  <span className="text-2xl font-bold text-foreground">
+                    {Number(tool.rating || 0).toFixed(1)}
+                  </span>
                   <div className="flex">
                     {[...Array(5)].map((_, i) => (
-                      <span key={i} className={i < Math.round(tool.rating) ? 'text-amber-400' : 'text-gray-300'}>
+                      <span
+                        key={i}
+                        className={i < Math.round(Number(tool.rating || 0)) ? 'text-amber-400' : 'text-gray-300'}
+                      >
                         ★
                       </span>
                     ))}
                   </div>
-                  {tool.review_count && (
-                    <span className="text-sm text-muted-foreground ml-2">({tool.review_count} reviews)</span>
-                  )}
+                  {tool.review_count ? (
+                    <span className="ml-2 text-sm text-muted-foreground">
+                      ({tool.review_count} reviews)
+                    </span>
+                  ) : null}
                 </div>
 
                 {tool.official_url && (
@@ -199,7 +209,7 @@ export default async function ToolDetailPage({ params }: ToolDetailPageProps) {
                     href={tool.official_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-4 py-2 bg-primary text-primary-foreground font-medium rounded hover:bg-primary/90 transition-colors"
+                    className="rounded bg-primary px-4 py-2 font-medium text-primary-foreground transition-colors hover:bg-primary/90"
                   >
                     Visit Official Site
                   </a>
@@ -207,35 +217,34 @@ export default async function ToolDetailPage({ params }: ToolDetailPageProps) {
               </div>
             </div>
 
-            {/* Description */}
             <div className="mb-8">
-              <h2 className="text-xl font-semibold text-foreground mb-4">About {tool.name}</h2>
-              <p className="text-muted-foreground leading-relaxed">
+              <h2 className="mb-4 text-xl font-semibold text-foreground">About {tool.name}</h2>
+              <p className="leading-relaxed text-muted-foreground">
                 {tool.full_description || tool.short_description}
               </p>
             </div>
 
-            {/* Pros & Cons */}
-            <div className="grid md:grid-cols-2 gap-8 mb-8">
+            <div className="mb-8 grid gap-8 md:grid-cols-2">
               <div>
-                <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+                <h3 className="mb-4 flex items-center gap-2 font-semibold text-foreground">
                   <span className="text-green-600">✓</span> Pros
                 </h3>
                 <ul className="space-y-2">
-                  {tool.pros.map((pro, i) => (
-                    <li key={i} className="text-muted-foreground text-sm">
+                  {pros.map((pro, i) => (
+                    <li key={i} className="text-sm text-muted-foreground">
                       • {pro}
                     </li>
                   ))}
                 </ul>
               </div>
+
               <div>
-                <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+                <h3 className="mb-4 flex items-center gap-2 font-semibold text-foreground">
                   <span className="text-red-600">✗</span> Cons
                 </h3>
                 <ul className="space-y-2">
-                  {tool.cons.map((con, i) => (
-                    <li key={i} className="text-muted-foreground text-sm">
+                  {cons.map((con, i) => (
+                    <li key={i} className="text-sm text-muted-foreground">
                       • {con}
                     </li>
                   ))}
@@ -243,17 +252,16 @@ export default async function ToolDetailPage({ params }: ToolDetailPageProps) {
               </div>
             </div>
 
-            {/* Pricing Tiers */}
-            {tool.pricing_tiers.length > 0 && (
+            {pricingTiers.length > 0 && (
               <div className="mb-8">
-                <h2 className="text-xl font-semibold text-foreground mb-4">Pricing Plans</h2>
-                <div className="grid md:grid-cols-2 gap-6">
-                  {tool.pricing_tiers.map((tier, i) => (
-                    <div key={i} className="border border-border rounded-lg p-6 bg-card">
-                      <h3 className="font-semibold text-foreground mb-2">{tier.name}</h3>
-                      <p className="text-2xl font-bold text-foreground mb-4">{tier.price}</p>
+                <h2 className="mb-4 text-xl font-semibold text-foreground">Pricing Plans</h2>
+                <div className="grid gap-6 md:grid-cols-2">
+                  {pricingTiers.map((tier, i) => (
+                    <div key={i} className="rounded-lg border border-border bg-card p-6">
+                      <h3 className="mb-2 font-semibold text-foreground">{tier.name}</h3>
+                      <p className="mb-4 text-2xl font-bold text-foreground">{tier.price}</p>
                       <ul className="space-y-2">
-                        {tier.features.map((feature, j) => (
+                        {(tier.features || []).map((feature, j) => (
                           <li key={j} className="text-sm text-muted-foreground">
                             ✓ {feature}
                           </li>
@@ -265,17 +273,18 @@ export default async function ToolDetailPage({ params }: ToolDetailPageProps) {
               </div>
             )}
 
-            {/* FAQs */}
-            {tool.faqs.length > 0 && (
+            {faqs.length > 0 && (
               <div className="mb-8">
-                <h2 className="text-xl font-semibold text-foreground mb-4">Frequently Asked Questions</h2>
+                <h2 className="mb-4 text-xl font-semibold text-foreground">Frequently Asked Questions</h2>
                 <div className="space-y-4">
-                  {tool.faqs.map((faq, i) => (
-                    <details key={i} className="border border-border rounded-lg p-4 cursor-pointer group">
+                  {faqs.map((faq, i) => (
+                    <details key={i} className="group cursor-pointer rounded-lg border border-border p-4">
                       <summary className="font-semibold text-foreground group-open:text-primary">
                         {faq.question}
                       </summary>
-                      <p className="text-muted-foreground mt-3 text-sm leading-relaxed">{faq.answer}</p>
+                      <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                        {faq.answer}
+                      </p>
                     </details>
                   ))}
                 </div>
@@ -283,27 +292,23 @@ export default async function ToolDetailPage({ params }: ToolDetailPageProps) {
             )}
           </div>
 
-          {/* Right Column - Sidebar */}
           <div className="lg:col-span-1">
-            {/* Quick Info Card */}
             <div className="sticky top-24 space-y-6">
-              {/* Pricing Badge */}
-              <div className="border border-border rounded-lg p-6 bg-card">
-                <h3 className="font-semibold text-foreground mb-4">Pricing Model</h3>
-                <span className="inline-block px-3 py-1 bg-secondary text-secondary-foreground text-sm font-medium rounded capitalize">
-                  {tool.price.replace('-', ' ')}
+              <div className="rounded-lg border border-border bg-card p-6">
+                <h3 className="mb-4 font-semibold text-foreground">Pricing Model</h3>
+                <span className="inline-block rounded bg-secondary px-3 py-1 text-sm font-medium text-secondary-foreground capitalize">
+                  {(tool.price || '').replace(/-/g, ' ')}
                 </span>
               </div>
 
-              {/* Tags */}
-              {tool.tags && tool.tags.length > 0 && (
-                <div className="border border-border rounded-lg p-6 bg-card">
-                  <h3 className="font-semibold text-foreground mb-4">Tags</h3>
+              {tags.length > 0 && (
+                <div className="rounded-lg border border-border bg-card p-6">
+                  <h3 className="mb-4 font-semibold text-foreground">Tags</h3>
                   <div className="flex flex-wrap gap-2">
-                    {tool.tags.map((tag) => (
+                    {tags.map((tag) => (
                       <span
                         key={tag}
-                        className="px-2 py-1 bg-secondary/50 text-secondary-foreground text-xs rounded capitalize"
+                        className="rounded bg-secondary/50 px-2 py-1 text-xs text-secondary-foreground capitalize"
                       >
                         {tag}
                       </span>
@@ -312,57 +317,44 @@ export default async function ToolDetailPage({ params }: ToolDetailPageProps) {
                 </div>
               )}
 
-              {/* Primary CTA - Affiliate Link */}
               {tool.affiliate_url && (
-                <div className="border-2 border-primary rounded-lg p-6 bg-primary/5">
-                  <h3 className="font-semibold text-foreground mb-3">Get Started</h3>
+                <div className="rounded-lg border-2 border-primary bg-primary/5 p-6">
+                  <h3 className="mb-3 font-semibold text-foreground">Get Started</h3>
                   <a
                     href={tool.affiliate_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block w-full px-4 py-3 bg-primary text-primary-foreground font-semibold rounded text-center hover:bg-primary/90 transition-colors mb-3"
+                    className="mb-3 block w-full rounded bg-primary px-4 py-3 text-center font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
                   >
                     Visit {tool.name}
                   </a>
-                  <p className="text-xs text-muted-foreground text-center">
-                    We may earn a small affiliate commission at no extra cost to you.
+                  <p className="text-center text-xs text-muted-foreground">
+                    This page may include affiliate links.
                   </p>
                 </div>
               )}
-
-              {/* Affiliate Disclosure */}
-              <div className="border border-amber-200 dark:border-amber-900 rounded-lg p-4 bg-amber-50 dark:bg-amber-950/30">
-                <div className="flex gap-2">
-                  <div className="text-amber-600 dark:text-amber-400 font-bold mt-0.5">ℹ️</div>
-                  <div className="text-xs text-amber-900 dark:text-amber-100">
-                    <p className="font-semibold mb-1">Affiliate Disclosure</p>
-                    <p>
-                      AILIQ is a participant in affiliate programs. We may earn commissions when you click and purchase through affiliate links.
-                      Our reviews remain independent and objective.{' '}
-                      <Link href="/affiliate-disclosure" className="underline hover:no-underline">
-                        Learn more
-                      </Link>
-                    </p>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>
 
-        {/* Related Tools */}
         {relatedTools.length > 0 && (
-          <div className="mt-16 pt-12 border-t border-border">
-            <h2 className="text-2xl font-semibold text-foreground mb-6">Similar Tools</h2>
-            <div className="grid md:grid-cols-3 gap-6">
+          <div className="mt-16 border-t border-border pt-12">
+            <h2 className="mb-6 text-2xl font-semibold text-foreground">Similar Tools</h2>
+            <div className="grid gap-6 md:grid-cols-3">
               {relatedTools.map((relatedTool) => (
                 <Link key={relatedTool.id} href={`/tools/${relatedTool.slug}`}>
-                  <div className="p-6 border border-border rounded-lg bg-card hover:border-primary/50 transition-all hover:shadow-md h-full flex flex-col">
-                    <h3 className="text-lg font-semibold text-foreground mb-2">{relatedTool.name}</h3>
-                    <p className="text-sm text-muted-foreground mb-4 flex-1">{relatedTool.short_description}</p>
+                  <div className="flex h-full flex-col rounded-lg border border-border bg-card p-6 transition-all hover:border-primary/50 hover:shadow-md">
+                    <h3 className="mb-2 text-lg font-semibold text-foreground">{relatedTool.name}</h3>
+                    <p className="mb-4 flex-1 text-sm text-muted-foreground">
+                      {relatedTool.short_description}
+                    </p>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="font-medium text-foreground">{relatedTool.rating.toFixed(1)} ★</span>
-                      <span className="text-xs text-muted-foreground capitalize">{relatedTool.price.replace('-', ' ')}</span>
+                      <span className="font-medium text-foreground">
+                        {Number(relatedTool.rating || 0).toFixed(1)} ★
+                      </span>
+                      <span className="text-xs capitalize text-muted-foreground">
+                        {(relatedTool.price || '').replace(/-/g, ' ')}
+                      </span>
                     </div>
                   </div>
                 </Link>
@@ -371,9 +363,8 @@ export default async function ToolDetailPage({ params }: ToolDetailPageProps) {
           </div>
         )}
 
-        {/* Back Link */}
-        <div className="mt-12 pt-6 border-t border-border">
-          <Link href="/tools" className="text-primary hover:text-primary/80 transition-colors">
+        <div className="mt-12 border-t border-border pt-6">
+          <Link href="/tools" className="text-primary transition-colors hover:text-primary/80">
             ← Back to All Tools
           </Link>
         </div>
