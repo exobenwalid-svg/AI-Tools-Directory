@@ -1,7 +1,5 @@
 /**
  * Data access queries layer
- * This layer abstracts whether data comes from Supabase or seed data
- * The rest of the app never cares about the data source
  */
 
 import { Tool, ToolCategory, FilterParams } from './types'
@@ -12,7 +10,6 @@ import {
   mapSupabaseCategoryToCategory,
 } from './mappers'
 
-// Import seed data (will be lazy-loaded)
 let seedTools: Tool[] | null = null
 let seedCategories: ToolCategory[] | null = null
 
@@ -54,9 +51,7 @@ export async function fetchToolsByCategory(category: string, limit?: number): Pr
 }
 
 export async function searchTools(query: string, limit: number = 20): Promise<Tool[]> {
-  if (!query.trim()) {
-    return []
-  }
+  if (!query.trim()) return []
 
   if (isSupabaseEnabled()) {
     return searchToolsFromSupabase(query, limit)
@@ -85,22 +80,32 @@ export async function getCategories(): Promise<ToolCategory[]> {
   return getCategoriesFromSeed()
 }
 
-// ============================================================================
-// SUPABASE IMPLEMENTATIONS
-// ============================================================================
+// Supabase
 
 async function fetchToolsFromSupabase(filters?: FilterParams): Promise<Tool[]> {
   const client = getSupabaseClient()
   if (!client) return []
 
-  let query = client.from('tools').select('*')
+  let query = client
+    .from('tools')
+    .select(`
+      *,
+      categories (
+        id,
+        name,
+        slug,
+        description,
+        icon
+      )
+    `)
+    .eq('published', true)
 
   if (filters?.category) {
-    query = query.eq('category', filters.category)
+    query = query.eq('categories.slug', filters.category)
   }
 
   if (filters?.price_range) {
-    query = query.eq('price', filters.price_range)
+    query = query.eq('pricing', filters.price_range)
   }
 
   if (filters?.min_rating) {
@@ -138,8 +143,18 @@ async function fetchToolBySlugFromSupabase(slug: string): Promise<Tool | null> {
 
   const { data, error } = await client
     .from('tools')
-    .select('*')
+    .select(`
+      *,
+      categories (
+        id,
+        name,
+        slug,
+        description,
+        icon
+      )
+    `)
     .eq('slug', slug)
+    .eq('published', true)
     .maybeSingle()
 
   if (error) {
@@ -147,9 +162,7 @@ async function fetchToolBySlugFromSupabase(slug: string): Promise<Tool | null> {
     return null
   }
 
-  if (!data) {
-    return null
-  }
+  if (!data) return null
 
   return mapSupabaseToolToTool(data)
 }
@@ -160,8 +173,18 @@ async function fetchToolsByCategoryFromSupabase(category: string, limit?: number
 
   let query = client
     .from('tools')
-    .select('*')
-    .eq('category', category)
+    .select(`
+      *,
+      categories!inner (
+        id,
+        name,
+        slug,
+        description,
+        icon
+      )
+    `)
+    .eq('categories.slug', category)
+    .eq('published', true)
     .order('rating', { ascending: false })
 
   if (limit) {
@@ -186,8 +209,18 @@ async function searchToolsFromSupabase(query: string, limit: number): Promise<To
 
   const { data, error } = await client
     .from('tools')
-    .select('*')
-    .or(`name.ilike.${searchTerm},short_description.ilike.${searchTerm}`)
+    .select(`
+      *,
+      categories (
+        id,
+        name,
+        slug,
+        description,
+        icon
+      )
+    `)
+    .eq('published', true)
+    .or(`name.ilike.${searchTerm},short_description.ilike.${searchTerm},best_for.ilike.${searchTerm}`)
     .limit(limit)
 
   if (error) {
@@ -204,24 +237,34 @@ async function getRelatedToolsFromSupabase(slug: string, limit: number): Promise
 
   const { data: toolData, error: toolError } = await client
     .from('tools')
-    .select('category')
+    .select('category_id')
     .eq('slug', slug)
     .maybeSingle()
 
   if (toolError) {
-    console.error('[AILIQ] Supabase get related tools seed error:', toolError)
+    console.error('[AILIQ] Supabase get related tool seed error:', toolError)
     return []
   }
 
-  if (!toolData?.category) {
+  if (!toolData?.category_id) {
     return []
   }
 
   const { data, error } = await client
     .from('tools')
-    .select('*')
-    .eq('category', toolData.category)
+    .select(`
+      *,
+      categories (
+        id,
+        name,
+        slug,
+        description,
+        icon
+      )
+    `)
+    .eq('category_id', toolData.category_id)
     .neq('slug', slug)
+    .eq('published', true)
     .order('rating', { ascending: false })
     .limit(limit)
 
@@ -239,8 +282,18 @@ async function getFeaturedToolsFromSupabase(limit: number): Promise<Tool[]> {
 
   const { data, error } = await client
     .from('tools')
-    .select('*')
+    .select(`
+      *,
+      categories (
+        id,
+        name,
+        slug,
+        description,
+        icon
+      )
+    `)
     .eq('featured', true)
+    .eq('published', true)
     .order('rating', { ascending: false })
     .limit(limit)
 
@@ -269,9 +322,7 @@ async function getCategoriesFromSupabase(): Promise<ToolCategory[]> {
   return data ? data.map(mapSupabaseCategoryToCategory) : []
 }
 
-// ============================================================================
-// SEED DATA IMPLEMENTATIONS
-// ============================================================================
+// Seed
 
 async function fetchToolsFromSeed(filters?: FilterParams): Promise<Tool[]> {
   const { tools } = await loadSeedData()
@@ -326,7 +377,6 @@ async function fetchToolsByCategoryFromSeed(category: string, limit?: number): P
 
 async function searchToolsFromSeed(query: string, limit: number): Promise<Tool[]> {
   const { tools } = await loadSeedData()
-
   const lowerQuery = query.toLowerCase()
 
   return tools
@@ -341,11 +391,9 @@ async function searchToolsFromSeed(query: string, limit: number): Promise<Tool[]
 
 async function getRelatedToolsFromSeed(slug: string, limit: number): Promise<Tool[]> {
   const { tools } = await loadSeedData()
-
   const tool = tools.find((t) => t.slug === slug)
-  if (!tool) {
-    return []
-  }
+
+  if (!tool) return []
 
   return tools
     .filter((t) => t.category === tool.category && t.slug !== slug)
