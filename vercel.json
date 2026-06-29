@@ -1,0 +1,109 @@
+{
+  "name": "AILIQ",
+  "version": 2,
+  "public": true,
+  "git": {
+    "deploymentEnabled": true,
+    "deploymentRollbackSupport": true
+  },
+  "buildCommand": "next build",
+  "devCommand": "next dev",
+  "installCommand": "pnpm install",
+  "framework": "nextjs",
+  "crons": [],
+  "env": [
+    {
+      "key": "NEXT_PUBLIC_SUPABASE_URL",
+      "description": "Supabase project URL",
+      "required": false
+    },
+    {
+      "key": "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+      "description": "Supabase anonymous key",
+      "required": false
+    },
+    {
+      "key": "APP_MODE",
+      "description": "Application mode: 'seed' or 'database'",
+      "value": "database",
+      "required": true
+    },
+    {
+      "key": "NEXT_PUBLIC_SITE_URL",
+      "description": "Production site URL",
+      "value": "https://www.ailiq.xyz",
+      "required": true
+    },
+    {
+      "key": "NEXT_PUBLIC_CONTACT_EMAIL",
+      "description": "Public contact email",
+      "value": "best4liker@gmail.com",
+      "required": true
+    },
+    {
+      "key": "NEXT_PUBLIC_X_HANDLE",
+      "description": "X/Twitter handle",
+      "value": "@AILIQDirectory",
+      "required": true
+    }
+  ],
+  "regions": ["iad1"],
+  "functions": {
+    "api/**/*.ts": {
+      "memory": 1024,
+      "maxDuration": 60
+    },
+    "app/**/*.ts": {
+      "memory": 512,
+      "maxDuration": 10
+    }
+  },
+  "redirects": [
+    {
+      "source": "/index.html",
+      "destination": "/",
+      "permanent": true
+    }
+  ],
+  "headers": [
+    {
+      "source": "/:path*",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        }
+      ]
+    },
+    {
+      "source": "/sitemap.xml",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/xml"
+        }
+      ]
+    },
+    {
+      "source": "/robots.txt",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/plain"
+        }
+      ]
+    }
+  ]
+}
