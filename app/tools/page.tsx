@@ -27,6 +27,60 @@ export default async function ToolsPage() {
           </p>
         </div>
 
+        <section className="mb-10 rounded-2xl border border-border bg-card p-6">
+          <h2 className="text-2xl font-semibold text-foreground">
+            Browse by Category
+          </h2>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+            Explore category hubs to find the best AI tools for writing, SEO,
+            meetings, research, design, and other workflows.
+          </p>
+
+          <div className="mt-5 flex flex-wrap gap-3">
+            <Link
+              href="/categories/ai-writing"
+              className="rounded-full border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+            >
+              Explore AI Writing
+            </Link>
+
+            <Link
+              href="/categories/ai-seo-tools"
+              className="rounded-full border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+            >
+              Explore AI SEO Tools
+            </Link>
+
+            <Link
+              href="/categories/ai-meeting-assistants"
+              className="rounded-full border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+            >
+              Explore AI Meeting Assistants
+            </Link>
+
+            <Link
+              href="/categories/ai-design"
+              className="rounded-full border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+            >
+              Explore AI Design
+            </Link>
+
+            <Link
+              href="/categories/ai-research-tools"
+              className="rounded-full border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+            >
+              Explore AI Research Tools
+            </Link>
+
+            <Link
+              href="/categories"
+              className="rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/15"
+            >
+              View All Categories
+            </Link>
+          </div>
+        </section>
+
         {tools.length === 0 ? (
           <div className="rounded-lg border border-border bg-card p-8">
             <h2 className="mb-2 text-xl font-semibold text-foreground">
