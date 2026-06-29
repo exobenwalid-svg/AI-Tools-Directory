@@ -1,7 +1,6 @@
 {
   "name": "AILIQ",
   "version": 2,
-  "public": true,
   "git": {
     "deploymentEnabled": true,
     "deploymentRollbackSupport": true
