@@ -4,37 +4,46 @@
 
 import { Tool, ToolCategory } from './types'
 
-// Row types from Supabase (can be extended as needed)
 export interface SupabaseToolRow {
   id: string
+  category_id: string | null
   slug: string
   name: string
-  category: string
-  price: string
-  short_description: string
-  full_description?: string | null
-  rating: number
-  review_count?: number | null
-  pros: string[]
-  cons: string[]
-  affiliate_url?: string | null
-  official_url?: string | null
-  images: string[]
-  pricing_tiers: Array<{
-    name: string
-    price: string
-    features: string[]
-    best_for?: string
-  }> | null
-  faqs: Array<{
-    question: string
-    answer: string
-  }> | null
+  official_url: string | null
+  pricing: string | null
+  rating: number | null
+  short_description: string | null
+  full_review: string | null
+  best_for: string | null
+  key_features: string[] | null
+  pros: string[] | null
+  cons: string[] | null
+  use_cases: string[] | null
+  faqs:
+    | Array<{
+        q?: string
+        a?: string
+        question?: string
+        answer?: string
+      }>
+    | null
   alternatives: string[] | null
-  featured: boolean
+  logo_url: string | null
+  cover_image_url: string | null
+  featured: boolean | null
+  published: boolean | null
+  seo_title: string | null
+  seo_description: string | null
   created_at: string
   updated_at: string
-  tags?: string[] | null
+  categories?: {
+    id: string
+    name: string
+    slug: string
+    description?: string | null
+    icon?: string | null
+    count?: number | null
+  } | null
 }
 
 export interface SupabaseCategoryRow {
@@ -46,45 +55,40 @@ export interface SupabaseCategoryRow {
   count?: number | null
 }
 
-/**
- * Convert a Supabase tool row to normalized Tool type
- */
 export function mapSupabaseToolToTool(row: SupabaseToolRow): Tool {
   return {
     id: row.id,
     slug: row.slug,
     name: row.name,
-    category: row.category,
-    price: row.price,
-    short_description: row.short_description,
-    full_description: row.full_description || undefined,
-    rating: row.rating,
-    review_count: row.review_count || undefined,
+    category: row.categories?.name || 'AI Tool',
+    price: row.pricing || 'N/A',
+    short_description: row.short_description || '',
+    full_description: row.full_review || undefined,
+    rating: Number(row.rating || 0),
+    review_count: undefined,
     pros: row.pros || [],
     cons: row.cons || [],
-    affiliate_url: row.affiliate_url || undefined,
+    affiliate_url: undefined,
     official_url: row.official_url || undefined,
-    images: row.images || [],
-    pricing_tiers: row.pricing_tiers || [],
-    faqs: row.faqs || [],
+    images: [row.logo_url, row.cover_image_url].filter(Boolean) as string[],
+    pricing_tiers: [],
+    faqs:
+      row.faqs?.map((faq) => ({
+        question: faq.question || faq.q || '',
+        answer: faq.answer || faq.a || '',
+      })) || [],
     alternatives: row.alternatives || [],
-    featured: row.featured || false,
+    featured: !!row.featured,
     created_at: row.created_at,
     updated_at: row.updated_at,
-    tags: row.tags || undefined,
+    tags: row.key_features || [],
   }
 }
 
-/**
- * Convert multiple Supabase tool rows to normalized Tool types
- */
 export function mapSupabaseToolsToTools(rows: SupabaseToolRow[]): Tool[] {
   return rows.map(mapSupabaseToolToTool)
 }
 
-/**
- * Convert a Supabase category row to normalized ToolCategory type
- */
 export function mapSupabaseCategoryToCategory(row: SupabaseCategoryRow): ToolCategory {
   return {
     id: row.id,
@@ -96,9 +100,6 @@ export function mapSupabaseCategoryToCategory(row: SupabaseCategoryRow): ToolCat
   }
 }
 
-/**
- * Convert multiple Supabase category rows to normalized ToolCategory types
- */
 export function mapSupabaseCategoriesToCategories(rows: SupabaseCategoryRow[]): ToolCategory[] {
   return rows.map(mapSupabaseCategoryToCategory)
 }
