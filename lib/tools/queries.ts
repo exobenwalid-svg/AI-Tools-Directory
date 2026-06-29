@@ -80,7 +80,9 @@ export async function getCategories(): Promise<ToolCategory[]> {
   return getCategoriesFromSeed()
 }
 
-// Supabase
+// ============================================================================
+// SUPABASE IMPLEMENTATIONS
+// ============================================================================
 
 async function fetchToolsFromSupabase(filters?: FilterParams): Promise<Tool[]> {
   const client = getSupabaseClient()
@@ -88,21 +90,8 @@ async function fetchToolsFromSupabase(filters?: FilterParams): Promise<Tool[]> {
 
   let query = client
     .from('tools')
-    .select(`
-      *,
-      categories (
-        id,
-        name,
-        slug,
-        description,
-        icon
-      )
-    `)
+    .select('*')
     .eq('published', true)
-
-  if (filters?.category) {
-    query = query.eq('categories.slug', filters.category)
-  }
 
   if (filters?.price_range) {
     query = query.eq('pricing', filters.price_range)
@@ -143,16 +132,7 @@ async function fetchToolBySlugFromSupabase(slug: string): Promise<Tool | null> {
 
   const { data, error } = await client
     .from('tools')
-    .select(`
-      *,
-      categories (
-        id,
-        name,
-        slug,
-        description,
-        icon
-      )
-    `)
+    .select('*')
     .eq('slug', slug)
     .eq('published', true)
     .maybeSingle()
@@ -171,19 +151,19 @@ async function fetchToolsByCategoryFromSupabase(category: string, limit?: number
   const client = getSupabaseClient()
   if (!client) return []
 
+  const categories = await getCategoriesFromSupabase()
+  const matchedCategory = categories.find(
+    (c) => c.slug === category || c.name === category
+  )
+
+  if (!matchedCategory) {
+    return []
+  }
+
   let query = client
     .from('tools')
-    .select(`
-      *,
-      categories!inner (
-        id,
-        name,
-        slug,
-        description,
-        icon
-      )
-    `)
-    .eq('categories.slug', category)
+    .select('*')
+    .eq('category_id', matchedCategory.id)
     .eq('published', true)
     .order('rating', { ascending: false })
 
@@ -209,16 +189,7 @@ async function searchToolsFromSupabase(query: string, limit: number): Promise<To
 
   const { data, error } = await client
     .from('tools')
-    .select(`
-      *,
-      categories (
-        id,
-        name,
-        slug,
-        description,
-        icon
-      )
-    `)
+    .select('*')
     .eq('published', true)
     .or(`name.ilike.${searchTerm},short_description.ilike.${searchTerm},best_for.ilike.${searchTerm}`)
     .limit(limit)
@@ -252,16 +223,7 @@ async function getRelatedToolsFromSupabase(slug: string, limit: number): Promise
 
   const { data, error } = await client
     .from('tools')
-    .select(`
-      *,
-      categories (
-        id,
-        name,
-        slug,
-        description,
-        icon
-      )
-    `)
+    .select('*')
     .eq('category_id', toolData.category_id)
     .neq('slug', slug)
     .eq('published', true)
@@ -282,16 +244,7 @@ async function getFeaturedToolsFromSupabase(limit: number): Promise<Tool[]> {
 
   const { data, error } = await client
     .from('tools')
-    .select(`
-      *,
-      categories (
-        id,
-        name,
-        slug,
-        description,
-        icon
-      )
-    `)
+    .select('*')
     .eq('featured', true)
     .eq('published', true)
     .order('rating', { ascending: false })
@@ -322,7 +275,9 @@ async function getCategoriesFromSupabase(): Promise<ToolCategory[]> {
   return data ? data.map(mapSupabaseCategoryToCategory) : []
 }
 
-// Seed
+// ============================================================================
+// SEED DATA IMPLEMENTATIONS
+// ============================================================================
 
 async function fetchToolsFromSeed(filters?: FilterParams): Promise<Tool[]> {
   const { tools } = await loadSeedData()
