@@ -5,7 +5,11 @@ import './globals.css'
 import Header from '@/components/header'
 import Footer from '@/components/footer'
 
-const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
+const geistSans = Geist({
+  variable: '--font-geist-sans',
+  subsets: ['latin'],
+})
+
 const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
   subsets: ['latin'],
@@ -14,28 +18,46 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.ailiq.xyz'),
   title: {
-    default: 'AILIQ | Trusted AI Tools Directory & Reviews',
+    default: 'AILIQ | AI Tools Directory, Reviews & Categories',
     template: '%s | AILIQ',
   },
-  description: 'Discover and compare 500+ AI tools with detailed reviews, ratings, and expert comparisons. Find the best AI solutions for your needs.',
-  keywords: ['AI tools', 'AI directory', 'AI comparison', 'AI reviews', 'AI solutions'],
-  generator: 'Next.js',
+  description:
+    'Discover AI tools for writing, SEO, research, meetings, design, productivity, and more with reviews, categories, and practical comparisons on AILIQ.',
   applicationName: 'AILIQ',
   referrer: 'strict-origin-when-cross-origin',
   creator: 'AILIQ',
   publisher: 'AILIQ',
+  authors: [{ name: 'AILIQ' }],
+  category: 'Technology',
+  classification: 'AI tools directory',
+  keywords: [
+    'AI tools',
+    'AI tools directory',
+    'AI reviews',
+    'AI categories',
+    'AI software',
+    'AI comparisons',
+  ],
   robots: {
     index: true,
     follow: true,
     nocache: false,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+      'max-video-preview': -1,
+    },
   },
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://www.ailiq.xyz',
+    url: 'https://www.ailiq.xyz/',
     siteName: 'AILIQ',
-    title: 'AILIQ | Trusted AI Tools Directory & Reviews',
-    description: 'Discover and compare 500+ AI tools with detailed reviews, ratings, and expert comparisons.',
+    title: 'AILIQ | AI Tools Directory, Reviews & Categories',
+    description:
+      'Discover AI tools for writing, SEO, research, meetings, design, productivity, and more with reviews, categories, and practical comparisons.',
     images: [
       {
         url: '/og-image.png',
@@ -49,8 +71,9 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     site: '@AILIQDirectory',
     creator: '@AILIQDirectory',
-    title: 'AILIQ | Trusted AI Tools Directory & Reviews',
-    description: 'Discover and compare 500+ AI tools with detailed reviews, ratings, and expert comparisons.',
+    title: 'AILIQ | AI Tools Directory, Reviews & Categories',
+    description:
+      'Discover AI tools for writing, SEO, research, meetings, design, productivity, and more with reviews, categories, and practical comparisons.',
     images: ['/og-image.png'],
   },
   icons: {
@@ -87,11 +110,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
-      <body className="font-sans antialiased bg-background text-foreground flex flex-col min-h-screen">
+      <body className="flex min-h-screen flex-col bg-background font-sans text-foreground antialiased">
         <Header />
-        <main className="flex-1">
-          {children}
-        </main>
+        <main className="flex-1">{children}</main>
         <Footer />
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
