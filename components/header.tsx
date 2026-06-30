@@ -10,9 +10,8 @@ export default function Header() {
     { href: '/', label: 'Home' },
     { href: '/tools', label: 'Tools' },
     { href: '/categories', label: 'Categories' },
-    { href: '/compare', label: 'Compare' },
-    { href: '/blog', label: 'Blog' },
     { href: '/about', label: 'About' },
+    { href: '/contact', label: 'Contact' },
   ]
 
   const isActive = (href: string) => {
@@ -22,16 +21,20 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex h-16 items-center justify-between">
           <Link
             href="/"
-            className="text-2xl font-bold text-foreground hover:text-primary transition-colors"
+            className="text-2xl font-bold text-foreground transition-colors hover:text-primary"
+            aria-label="AILIQ home"
           >
             AILIQ
           </Link>
 
-          <nav className="hidden md:flex items-center gap-8">
+          <nav
+            aria-label="Primary navigation"
+            className="hidden items-center gap-8 md:flex"
+          >
             {navItems.map((item) => (
               <Link
                 key={item.href}
@@ -41,6 +44,7 @@ export default function Header() {
                     ? 'text-primary'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
+                aria-current={isActive(item.href) ? 'page' : undefined}
               >
                 {item.label}
               </Link>
@@ -48,10 +52,10 @@ export default function Header() {
           </nav>
 
           <Link
-            href="/contact"
-            className="hidden sm:inline-block px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-md hover:bg-primary/90 transition-colors"
+            href="/tools"
+            className="hidden rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 sm:inline-block"
           >
-            Contact
+            Browse Tools
           </Link>
         </div>
       </div>
