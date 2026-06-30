@@ -8,21 +8,9 @@ type PageProps = {
   }>
 }
 
-function getCategoryFaqs(categoryName: string) {
-  return [
-    {
-      question: `What are the best ${categoryName} tools?`,
-      answer: `The best ${categoryName} tools depend on your workflow, budget, and goals. Compare features, pricing, strengths, and use cases to choose the right option.`,
-    },
-    {
-      question: `How do I choose the right ${categoryName} tool?`,
-      answer: `Start by identifying your main use case, then compare output quality, ease of use, pricing, team features, and how well the tool fits your workflow.`,
-    },
-    {
-      question: `Are ${categoryName} tools worth it?`,
-      answer: `${categoryName} tools can be worth it if they save time, improve quality, or help your team scale work more efficiently.`,
-    },
-  ]
+type CategoryFaq = {
+  q: string
+  a: string
 }
 
 export async function generateMetadata({ params }: PageProps) {
@@ -83,7 +71,7 @@ export default async function CategoryPage({ params }: PageProps) {
     sort: 'rating',
   })
 
-  const faqs = getCategoryFaqs(category.name)
+  const faqs: CategoryFaq[] = Array.isArray(category.faqs) ? category.faqs : []
 
   const breadcrumbJsonLd = {
     '@context': 'https://schema.org',
@@ -110,18 +98,21 @@ export default async function CategoryPage({ params }: PageProps) {
     ],
   }
 
-  const faqJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: faqs.map((faq) => ({
-      '@type': 'Question',
-      name: faq.question,
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: faq.answer,
-      },
-    })),
-  }
+  const faqJsonLd =
+    faqs.length > 0
+      ? {
+          '@context': 'https://schema.org',
+          '@type': 'FAQPage',
+          mainEntity: faqs.map((faq) => ({
+            '@type': 'Question',
+            name: faq.q,
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: faq.a,
+            },
+          })),
+        }
+      : null
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-10">
@@ -129,10 +120,12 @@ export default async function CategoryPage({ params }: PageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
-      />
+      {faqJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        />
+      )}
 
       <nav className="mb-6 text-sm text-gray-500">
         <Link href="/" className="hover:text-gray-900">
@@ -231,26 +224,28 @@ export default async function CategoryPage({ params }: PageProps) {
         </div>
       </section>
 
-      <section className="mb-12">
-        <h2 className="text-2xl font-semibold text-gray-900">
-          Frequently asked questions about {category.name}
-        </h2>
-        <div className="mt-6 space-y-4">
-          {faqs.map((faq) => (
-            <article
-              key={faq.question}
-              className="rounded-2xl border border-gray-200 bg-white p-6"
-            >
-              <h3 className="text-lg font-semibold text-gray-900">
-                {faq.question}
-              </h3>
-              <p className="mt-2 text-sm leading-6 text-gray-600">
-                {faq.answer}
-              </p>
-            </article>
-          ))}
-        </div>
-      </section>
+      {faqs.length > 0 && (
+        <section className="mb-12">
+          <h2 className="text-2xl font-semibold text-gray-900">
+            Frequently asked questions about {category.name}
+          </h2>
+          <div className="mt-6 space-y-4">
+            {faqs.map((faq) => (
+              <article
+                key={faq.q}
+                className="rounded-2xl border border-gray-200 bg-white p-6"
+              >
+                <h3 className="text-lg font-semibold text-gray-900">
+                  {faq.q}
+                </h3>
+                <p className="mt-2 text-sm leading-6 text-gray-600">
+                  {faq.a}
+                </p>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section>
         <h2 className="text-2xl font-semibold text-gray-900">
