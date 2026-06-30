@@ -15,6 +15,11 @@ export type ToolFAQ = {
   answer: string
 }
 
+export type CategoryFAQ = {
+  q: string
+  a: string
+}
+
 export type Tool = {
   id: string
   slug: string
@@ -46,6 +51,11 @@ export type ToolCategory = {
   description?: string
   icon?: string
   count?: number
+  intro_title?: string
+  intro_description?: string
+  seo_title?: string
+  seo_description?: string
+  faqs?: CategoryFAQ[]
 }
 
 export type SearchResult = {
