@@ -53,6 +53,18 @@ export interface SupabaseCategoryRow {
   description?: string | null
   icon?: string | null
   count?: number | null
+  intro_title?: string | null
+  intro_description?: string | null
+  seo_title?: string | null
+  seo_description?: string | null
+  faqs?:
+    | Array<{
+        q?: string
+        a?: string
+        question?: string
+        answer?: string
+      }>
+    | null
 }
 
 export function mapSupabaseToolToTool(row: SupabaseToolRow): Tool {
@@ -97,6 +109,15 @@ export function mapSupabaseCategoryToCategory(row: SupabaseCategoryRow): ToolCat
     description: row.description || undefined,
     icon: row.icon || undefined,
     count: row.count || undefined,
+    intro_title: row.intro_title || undefined,
+    intro_description: row.intro_description || undefined,
+    seo_title: row.seo_title || undefined,
+    seo_description: row.seo_description || undefined,
+    faqs:
+      row.faqs?.map((faq) => ({
+        q: faq.q || faq.question || '',
+        a: faq.a || faq.answer || '',
+      })) || [],
   }
 }
 
