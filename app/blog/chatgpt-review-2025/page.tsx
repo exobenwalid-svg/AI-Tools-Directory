@@ -201,8 +201,7 @@ export default function ChatGPTReview2025Page() {
         </section>
 
         {/* What is ChatGPT? */}
-        <section className="space-y-4">
-          <h
+                <section className="space-y-4">
           <h2 className="text-2xl font-semibold">What is ChatGPT?</h2>
           <p>
             ChatGPT is an AI assistant developed by OpenAI. It helps users generate text,
@@ -216,7 +215,6 @@ export default function ChatGPTReview2025Page() {
           </p>
         </section>
 
-        {/* Key features */}
         <section className="space-y-4">
           <h2 className="text-2xl font-semibold">Key features in 2025</h2>
           <ul className="list-disc space-y-2 pl-6">
@@ -238,7 +236,6 @@ export default function ChatGPTReview2025Page() {
           </p>
         </section>
 
-        {/* My experience section */}
         <section className="space-y-4">
           <h2 className="text-2xl font-semibold">My experience using ChatGPT</h2>
           <p>
@@ -260,7 +257,6 @@ export default function ChatGPTReview2025Page() {
           </p>
         </section>
 
-        {/* Pricing */}
         <section className="space-y-4">
           <h2 className="text-2xl font-semibold">Pricing: Free vs Plus vs Team</h2>
           <p className="text-sm text-muted-foreground">
@@ -276,7 +272,7 @@ export default function ChatGPTReview2025Page() {
             before making a decision.
           </p>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm border-collapse">
+            <table className="w-full border-collapse text-sm">
               <thead>
                 <tr className="border-b text-left">
                   <th className="py-3 pr-6 font-semibold">Plan</th>
@@ -318,7 +314,6 @@ export default function ChatGPTReview2025Page() {
           </div>
         </section>
 
-        {/* Pros and cons */}
         <section className="space-y-4">
           <h2 className="text-2xl font-semibold">Pros and cons</h2>
           <div className="grid gap-6 md:grid-cols-2">
@@ -344,7 +339,6 @@ export default function ChatGPTReview2025Page() {
           </div>
         </section>
 
-        {/* Who should use ChatGPT */}
         <section className="space-y-4">
           <h2 className="text-2xl font-semibold">Who should use ChatGPT?</h2>
           <p>
@@ -363,7 +357,6 @@ export default function ChatGPTReview2025Page() {
           </p>
         </section>
 
-        {/* ChatGPT vs alternatives */}
         <section className="space-y-4">
           <h2 className="text-2xl font-semibold">ChatGPT vs alternatives</h2>
           <p>
@@ -384,7 +377,6 @@ export default function ChatGPTReview2025Page() {
           </p>
         </section>
 
-        {/* FAQ */}
         <section className="space-y-5">
           <h2 className="text-2xl font-semibold">Frequently asked questions</h2>
           <div className="space-y-4">
@@ -397,7 +389,6 @@ export default function ChatGPTReview2025Page() {
           </div>
         </section>
 
-        {/* Final assessment */}
         <section className="space-y-4 rounded-xl border p-6">
           <h2 className="text-2xl font-semibold">Final assessment</h2>
           <p>
