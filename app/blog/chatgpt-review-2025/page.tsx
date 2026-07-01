@@ -3,7 +3,7 @@ import Link from 'next/link'
 
 const siteUrl = 'https://www.ailiq.xyz'
 const pageUrl = `${siteUrl}/blog/chatgpt-review-2025`
-const ogImageUrl = `${siteUrl}/images/chatgpt-review-2025-og.jpg`
+const ogImageUrl = `${siteUrl}/images/chatgpt-review-2025-hero.png`
 
 const title = 'ChatGPT Review 2025: Is ChatGPT Plus Worth It? | ailiq'
 const description =
@@ -168,16 +168,14 @@ export default function ChatGPTReview2025Page() {
             worth paying for.
           </p>
         </header>
-
-                <section aria-label="ChatGPT interface screenshot" className="space-y-3">
+        <section aria-label="ChatGPT interface screenshot" className="space-y-3">
           <div className="overflow-hidden rounded-xl border">
-            <Image
+            <img
               src="/images/chatgpt-review-2025-hero.png"
               alt="ChatGPT interface screenshot used in the 2025 review article"
               width={1600}
               height={900}
               className="h-auto w-full"
-              priority
             />
           </div>
           <p className="text-xs text-muted-foreground">
