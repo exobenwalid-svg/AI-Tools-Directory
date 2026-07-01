@@ -1,15 +1,9 @@
-import type { MetadataRoute } from 'next'
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /search/?q=
+Disallow: /*?utm_*
+Disallow: /*?ref=*
 
-export default function robots(): MetadataRoute.Robots {
-  return {
-    rules: [
-      {
-        userAgent: '*',
-        allow: '/',
-        disallow: ['/admin/', '/draft/', '/preview/'],
-      },
-    ],
-    sitemap: 'https://www.ailiq.xyz/sitemap.xml',
-    host: 'https://www.ailiq.xyz',
-  }
-}
+Sitemap: https://www.ailiq.xyz/sitemap.xml
