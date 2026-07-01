@@ -3,7 +3,7 @@ import Link from 'next/link'
 
 const siteUrl = 'https://www.ailiq.xyz'
 const pageUrl = `${siteUrl}/blog/chatgpt-vs-claude-vs-gemini`
-const ogImageUrl = `${siteUrl}/images/chatgpt-vs-claude-vs-gemini-og.jpg`
+const ogImageUrl = `${siteUrl}/images/chatgpt-vs-claude-vs-gemini-og.png`
 
 const title = 'ChatGPT vs Claude vs Gemini (2025): Which AI Assistant Should You Use? | ailiq'
 const description =
