@@ -168,6 +168,21 @@ export default function ChatGPTVsClaudeVsGeminiPage() {
           </p>
         </header>
 
+                <section aria-label="AI assistant comparison illustration" className="space-y-3">
+          <div className="overflow-hidden rounded-xl border">
+            <img
+              src="/images/chatgpt-vs-claude-vs-gemini-hero.png"
+              alt="Hero illustration comparing ChatGPT, Claude, and Gemini in 2025"
+              width={1600}
+              height={900}
+              className="h-auto w-full"
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Visual overview for comparing ChatGPT, Claude, and Gemini across major use cases.
+          </p>
+        </section>
+        
         {/* Intro summary */}
         <section className="space-y-4">
           <h2 className="text-2xl font-semibold">Short answer</h2>
