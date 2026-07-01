@@ -169,17 +169,19 @@ export default function ChatGPTReview2025Page() {
           </p>
         </header>
 
-        {/* Optional hero image (replace src with a real image in production) */}
-        <section aria-label="ChatGPT interface screenshot" className="space-y-3">
-          <div className="overflow-hidden rounded-xl border bg-muted">
-            <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
-              {/* Replace this placeholder with a real <Image> or <img> when you have assets */}
-              ChatGPT interface illustration (replace with real screenshot in production)
-            </div>
+                <section aria-label="ChatGPT interface screenshot" className="space-y-3">
+          <div className="overflow-hidden rounded-xl border">
+            <Image
+              src="/images/chatgpt-review-2025-hero.png"
+              alt="ChatGPT interface screenshot used in the 2025 review article"
+              width={1600}
+              height={900}
+              className="h-auto w-full"
+              priority
+            />
           </div>
           <p className="text-xs text-muted-foreground">
-            This article focuses on practical use cases and tradeoffs of ChatGPT in 2025, not
-            just a feature list.
+            Screenshot used to illustrate the ChatGPT review and overall workflow experience in 2025.
           </p>
         </section>
 
